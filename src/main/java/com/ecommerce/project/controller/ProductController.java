@@ -40,14 +40,23 @@ public class ProductController {
     }
 
     @GetMapping("/public/categories/{categoryId}/products")
-    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long categoryId) {
-        ProductResponse productResponse = productService.searchByCategory(categoryId);
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long categoryId,
+                                                          @RequestParam(name = "pageNumber",defaultValue="0",required = false ) Integer pageNumber,
+                                                          @RequestParam(name = "pageSize",defaultValue="10",required = false ) Integer pageSize,
+                                                          @RequestParam(name = "sortBy",defaultValue="productId",required = false ) String sortBy,
+                                                          @RequestParam(name = "sortOrder",defaultValue="asc",required = false ) String sortOrder) {
+        ProductResponse productResponse = productService.searchByCategory(categoryId,pageNumber,pageSize,sortBy,sortOrder);
         return new ResponseEntity<>(productResponse,HttpStatus.OK);
     }
 
     @GetMapping("/public/products/keyword/{keyword}")
-    public ResponseEntity<ProductResponse> getProductByKeyword(@PathVariable String keyword) {
-        ProductResponse productResponse = productService.searchProductByKeyword(keyword);
+    public ResponseEntity<ProductResponse> getProductByKeyword(
+                                                               @PathVariable String keyword,
+                                                               @RequestParam(name = "pageNumber",defaultValue="0",required = false ) Integer pageNumber,
+                                                               @RequestParam(name = "pageSize",defaultValue="10",required = false ) Integer pageSize,
+                                                               @RequestParam(name = "sortBy",defaultValue="productId",required = false ) String sortBy,
+                                                               @RequestParam(name = "sortOrder",defaultValue="asc",required = false ) String sortOrder) {
+        ProductResponse productResponse = productService.searchProductByKeyword(keyword,pageNumber,pageSize,sortBy,sortOrder);
         return new ResponseEntity<>(productResponse,HttpStatus.FOUND);
     }
 

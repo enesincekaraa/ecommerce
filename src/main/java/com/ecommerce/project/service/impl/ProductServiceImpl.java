@@ -103,39 +103,70 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductResponse searchByCategory(Long categoryId) {
+    public ProductResponse searchByCategory(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(()->
                         new ResourceNotFoundException("Category", "categoryId", categoryId));
 
-        List<Product> products = productRepository
-                .findByCategoryOrderByPriceAsc(category);
+        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
+        Page<Product> productPage = productRepository.findByCategoryOrderByPriceAsc(category,pageDetails);
+
+        List<Product> products = productPage.getContent();
+
         if (products.isEmpty()){
             throw new APIException("No products found by this categoryname: " + category.getCategoryName());
         }else {
             List<ProductDto> productDtos = products.stream().map(product ->
-                            modelMapper.map(product, ProductDto.class))
-                    .collect(Collectors.toList());
+                            modelMapper.map(product, ProductDto.class)).collect(Collectors.toList());
+
             ProductResponse productResponse = new ProductResponse();
             productResponse.setContent(productDtos);
+            productResponse.setPageNumber(productPage.getNumber());
+            productResponse.setPageSize(productPage.getSize());
+            productResponse.setTotalPages(productPage.getTotalPages());
+            productResponse.setTotalElements(productPage.getTotalElements());
+            productResponse.setLastPage(productPage.isLast());
             return productResponse;
         }
 
     }
 
     @Override
-    public ProductResponse searchProductByKeyword(String keyword) {
-        List<Product> products = productRepository.findByProductNameLikeIgnoreCase('%' + keyword +'%');
-        if (products.isEmpty()){
-            throw new APIException("No products found by this keyword: " + keyword);
-        }else {
+    public ProductResponse searchProductByKeyword(String keyword, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
+        Page<Product> productPage = productRepository.findByProductNameLikeIgnoreCase('%' + keyword +'%' ,pageDetails);
+
+
+
+            List<Product> products = productPage.getContent();
+            if (products.size()==0){
+                throw new APIException("Product not found with keyword: " + keyword);
+            }
             List<ProductDto> productDtos = products.stream()
                     .map(x -> modelMapper.map(x, ProductDto.class))
                     .collect(Collectors.toList());
+
+            if (products.size()==0){
+                throw new APIException("Product not found with keyword: " + keyword);
+            }
             ProductResponse productResponse = new ProductResponse();
             productResponse.setContent(productDtos);
+            productResponse.setPageNumber(productPage.getNumber());
+            productResponse.setPageSize(productPage.getSize());
+            productResponse.setTotalPages(productPage.getTotalPages());
+            productResponse.setTotalElements(productPage.getTotalElements());
+            productResponse.setLastPage(productPage.isLast());
             return productResponse;
-        }
+
     }
 
     @Override
