@@ -15,6 +15,22 @@ spring:
         format_sql: true
     hibernate:
       ddl-auto: update
+#
+#  app:
+#    jwtSecret: mySecretKey123912738aopsgjnspkmndfsopkvajoirjg94gf2opfng2moknm
+#    jwtExpirationMs: 3000000
+#
+#
+#logging:
+#  level:
+#    org:
+#      springframework: DEBUG
+#      hibernate:
+#        SQL: DEBUG
+#      springframework.security: DEBUG
+#    com:
+#      ecommerce:
+#        project: DEBUG
 
 project:
   image: images/
