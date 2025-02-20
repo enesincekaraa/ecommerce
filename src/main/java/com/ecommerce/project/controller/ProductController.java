@@ -7,6 +7,7 @@ import com.ecommerce.project.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,12 +23,14 @@ public class ProductController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/categories/{categoryId}/product")
     public ResponseEntity<ProductDto> addProduct(@Valid @RequestBody ProductDto productDTO,
                                                  @PathVariable Long categoryId){
         ProductDto savedProductDTO = productService.addProduct(categoryId, productDTO);
         return new ResponseEntity<>(savedProductDTO, HttpStatus.CREATED);
     }
+
 
     @GetMapping("/public/products")
     public ResponseEntity<ProductResponse> getAllProducts(
@@ -60,13 +63,15 @@ public class ProductController {
         return new ResponseEntity<>(productResponse, HttpStatus.FOUND);
     }
 
-    @PutMapping("/admin/products/{productId}")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('SELLER') and @securityService.isProductOwner(#productId))")
+    @PutMapping("/products/{productId}")
     public ResponseEntity<ProductDto> updateProduct(@Valid @RequestBody ProductDto productDTO,
                                                     @PathVariable Long productId){
         ProductDto updatedProductDTO = productService.updateProduct(productId, productDTO);
         return new ResponseEntity<>(updatedProductDTO, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/admin/products/{productId}")
     public ResponseEntity<ProductDto> deleteProduct(@PathVariable Long productId){
         ProductDto deletedProduct = productService.deleteProduct(productId);

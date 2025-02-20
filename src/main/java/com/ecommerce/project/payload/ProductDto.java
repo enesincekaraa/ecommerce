@@ -18,4 +18,7 @@ public class ProductDto {
     private double specialPrice;
 
 
+    public void setUserId(Long userId) {
+
+    }
 }

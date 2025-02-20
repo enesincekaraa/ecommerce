@@ -20,22 +20,22 @@ spring:
     redis:
       port: 6379
       host: redis
-#
-#  app:
-#    jwtSecret: mySecretKey123912738aopsgjnspkmndfsopkvajoirjg94gf2opfng2moknm
-#    jwtExpirationMs: 3000000
-#
-#
-#logging:
-#  level:
-#    org:
-#      springframework: DEBUG
-#      hibernate:
-#        SQL: DEBUG
-#      springframework.security: DEBUG
-#    com:
-#      ecommerce:
-#        project: DEBUG
+
+  app:
+    jwtSecret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    jwtExpirationMs: 3000000
+
+
+logging:
+  level:
+    org:
+      springframework: DEBUG
+      hibernate:
+        SQL: DEBUG
+      springframework.security: DEBUG
+    com:
+      ecommerce:
+        project: DEBUG
 
 project:
   image: images/

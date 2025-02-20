@@ -4,10 +4,12 @@ import com.ecommerce.project.exceptions.APIException;
 import com.ecommerce.project.exceptions.ResourceNotFoundException;
 import com.ecommerce.project.model.Category;
 import com.ecommerce.project.model.Product;
+import com.ecommerce.project.model.User;
 import com.ecommerce.project.payload.ProductDto;
 import com.ecommerce.project.payload.ProductResponse;
 import com.ecommerce.project.repository.CategoryRepository;
 import com.ecommerce.project.repository.ProductRepository;
+import com.ecommerce.project.repository.UserRepository;
 import com.ecommerce.project.service.FileService;
 import com.ecommerce.project.service.ProductService;
 import org.modelmapper.ModelMapper;
@@ -19,6 +21,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -30,15 +35,17 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;  // Bunu ekleyin
     private final ModelMapper modelMapper;
     private final FileService fileService;
 
     @Value("${project.image}")
     private String path;
 
-    public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository, ModelMapper modelMapper, FileService fileService) {
+    public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository, UserRepository userRepository, ModelMapper modelMapper, FileService fileService) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.userRepository = userRepository;
         this.modelMapper = modelMapper;
         this.fileService = fileService;
     }
@@ -46,34 +53,22 @@ public class ProductServiceImpl implements ProductService {
     @CacheEvict(value = {"products","search_keyword","search_category"},allEntries = true)
     @Override
     public ProductDto addProduct(Long categoryId, ProductDto productDto) {
-        Category category = categoryRepository
-                .findById(categoryId)
-                .orElseThrow(()->
-                        new ResourceNotFoundException("Category", "categoryId", categoryId));
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
 
-        boolean ifProductNotPresent=true;
 
-        List<Product> products = category.getProducts();
-        for (int i = 0; i<products.size();i++){
-            if (products.get(i).getProductName().equals(productDto.getProductName())){
-                ifProductNotPresent=false;
-                break;
-            }
-        }
-        if (ifProductNotPresent){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User Not found"));
+
         Product product = modelMapper.map(productDto, Product.class);
-
-        product.setImage("default.png");
         product.setCategory(category);
-        double specialPrice = product.getPrice() - ((product.getDiscount() * 0.01) * product.getPrice());
-        product.setSpecialPrice(specialPrice);
+        product.setUser(currentUser);
 
         Product savedProduct = productRepository.save(product);
         return modelMapper.map(savedProduct, ProductDto.class);
-        }else {
-            throw new APIException("Product already exists");
-        }
     }
+
 
 
     @Cacheable(value = "products",key = "#root.methodName",unless = "#result == null")

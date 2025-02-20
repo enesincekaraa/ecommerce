@@ -1,6 +1,7 @@
 package com.ecommerce.project.payload;
 
 
+import com.ecommerce.project.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,4 +18,5 @@ public class ProductResponse {
     private Long totalElements;
     private Integer totalPages;
     private boolean lastPage;
+    private User user;
 }

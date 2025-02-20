@@ -11,6 +11,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -35,6 +36,7 @@ public class CategoryController {
         return new ResponseEntity<>(categoryResponse, HttpStatus.OK);
     }
 
+
     @GetMapping("public/category")
     public ResponseEntity<GetOneCategoryDto> getCategoryByName(@RequestParam String categoryName){
         GetOneCategoryDto getOneCategoryDto=categoryService.getCategoryByName(categoryName);
@@ -42,6 +44,7 @@ public class CategoryController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/public/categories")
     public ResponseEntity<CategoryDto> createCategory(@Valid @RequestBody CategoryDto categoryDTO){
         CategoryDto savedCategoryDTO = categoryService.createCategory(categoryDTO);
@@ -49,6 +52,7 @@ public class CategoryController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/admin/categories/{categoryId}")
     public ResponseEntity<CategoryDto> deleteCategory(@PathVariable Long categoryId){
         CategoryDto deletedCategory = categoryService.deleteCategory(categoryId);
@@ -57,6 +61,7 @@ public class CategoryController {
 
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/public/categories/{categoryId}")
     public ResponseEntity<CategoryDto> updateCategory(@Valid @RequestBody CategoryDto categoryDto,
                                                       @PathVariable Long categoryId){
