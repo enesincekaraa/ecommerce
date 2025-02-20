@@ -20,6 +20,8 @@ public class ProductController {
     public ProductController(ProductService productService) {
         this.productService = productService;
     }
+
+
     @PostMapping("/admin/categories/{categoryId}/product")
     public ResponseEntity<ProductDto> addProduct(@Valid @RequestBody ProductDto productDTO,
                                                  @PathVariable Long categoryId){

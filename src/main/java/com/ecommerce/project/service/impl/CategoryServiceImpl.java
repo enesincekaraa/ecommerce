@@ -5,9 +5,13 @@ import com.ecommerce.project.exceptions.ResourceNotFoundException;
 import com.ecommerce.project.model.Category;
 import com.ecommerce.project.payload.CategoryDto;
 import com.ecommerce.project.payload.CategoryResponse;
+import com.ecommerce.project.payload.GetOneCategoryDto;
 import com.ecommerce.project.repository.CategoryRepository;
 import com.ecommerce.project.service.CategoryService;
 import org.modelmapper.ModelMapper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +33,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
 
+    @Cacheable(value = "categories",key = "#root.methodName",unless = "#result == null")
     @Override
     public CategoryResponse getAllCategories(Integer pageNumber, Integer pageSize,String sortBy,String sortOrder){
 
@@ -59,6 +64,17 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryResponse;
     }
 
+    @CachePut(value = "category_name", key = "'getCategoryByName' + #categoryName", unless = "#result == null")
+    @Override
+    public GetOneCategoryDto getCategoryByName(String categoryName) {
+        Category category = categoryRepository.findByCategoryName(categoryName);
+        if (category==null){
+            throw new ResourceNotFoundException("Category not found","categoryname",categoryName);
+        }
+        return modelMapper.map(category, GetOneCategoryDto.class);
+    }
+
+    @CacheEvict(value = {"categories","category_name"},allEntries = true)
     @Override
     public CategoryDto createCategory(CategoryDto categoryDto) {
         Category category = modelMapper.map(categoryDto, Category.class);
@@ -72,6 +88,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     }
 
+    @CacheEvict(value = {"categories","category_name"},allEntries = true)
     @Override
     public CategoryDto deleteCategory(Long categoryId) {
         Category category = categoryRepository.findById(categoryId).orElseThrow(
@@ -80,19 +97,25 @@ public class CategoryServiceImpl implements CategoryService {
         return modelMapper.map( category, CategoryDto.class);
     }
 
+    @CachePut(value = "category_name"
+            ,key = "'getCategoryByName'+#categoryDto.categoryName"
+            ,unless = "#result==null")
+    @CacheEvict(value = "categories", allEntries = true)
     @Override
     public CategoryDto updateCategory(Long categoryId, CategoryDto categoryDto) {
-
-        Category category = modelMapper.map(categoryDto, Category.class);
-
-        Category savedCategory = categoryRepository.findById(categoryId)
+        Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(
-                ()-> new ResourceNotFoundException("Category","categoryId",categoryId));
-        category.setCategoryId(categoryId);
-        savedCategory = categoryRepository.save(category);
-        return modelMapper.map(savedCategory, CategoryDto.class);
+                        ()->
+                                new ResourceNotFoundException("Category","categoryId",categoryId));
+        Category mapCategory =modelMapper.map(categoryDto,Category.class);
+
+
+        mapCategory.setCategoryId(categoryId);
+        mapCategory.setCategoryName(categoryDto.getCategoryName());
+
+        Category savedCategory = categoryRepository.save(mapCategory);
+        return modelMapper.map(savedCategory,CategoryDto.class);
 
     }
-
 
 }

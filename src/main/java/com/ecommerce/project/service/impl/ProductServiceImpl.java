@@ -12,6 +12,9 @@ import com.ecommerce.project.service.FileService;
 import com.ecommerce.project.service.ProductService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +43,7 @@ public class ProductServiceImpl implements ProductService {
         this.fileService = fileService;
     }
 
+    @CacheEvict(value = {"products","search_keyword","search_category"},allEntries = true)
     @Override
     public ProductDto addProduct(Long categoryId, ProductDto productDto) {
         Category category = categoryRepository
@@ -71,6 +75,8 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+
+    @Cacheable(value = "products",key = "#root.methodName",unless = "#result == null")
     @Override
     public ProductResponse getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
@@ -102,6 +108,7 @@ public class ProductServiceImpl implements ProductService {
 
     }
 
+    @CachePut(value = "search_category",key = "'searchByCategory' + #categoryId",unless = "#result==null")
     @Override
     public ProductResponse searchByCategory(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
 
@@ -137,6 +144,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CachePut(value = "search_keyword",key = "'searchProductByKeyword'+#keyword",unless = "#result==0")
     public ProductResponse searchProductByKeyword(String keyword, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
@@ -169,6 +177,9 @@ public class ProductServiceImpl implements ProductService {
 
     }
 
+
+
+    @CachePut(value = "products", key = "#productId", unless = "#result == null")
     @Override
     public ProductDto updateProduct(Long productId, ProductDto productDto) {
         Product productFromDb= productRepository.findById(productId)
@@ -188,6 +199,7 @@ public class ProductServiceImpl implements ProductService {
         return modelMapper.map(productFromDb, ProductDto.class);
     }
 
+    @CacheEvict(value = {"products","search_keyword","search_category"},allEntries = true)
     @Override
     public ProductDto deleteProduct(Long productId) {
         Product product = productRepository.findById(productId)

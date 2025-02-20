@@ -3,8 +3,12 @@ package com.ecommerce.project.controller;
 import com.ecommerce.project.config.AppConstants;
 import com.ecommerce.project.payload.CategoryDto;
 import com.ecommerce.project.payload.CategoryResponse;
+import com.ecommerce.project.payload.GetOneCategoryDto;
 import com.ecommerce.project.service.CategoryService;
 import jakarta.validation.Valid;
+import org.hibernate.annotations.Cache;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +24,7 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
+
     @GetMapping("/public/categories")
     public ResponseEntity<CategoryResponse> getAllCategories(
             @RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
@@ -30,17 +35,26 @@ public class CategoryController {
         return new ResponseEntity<>(categoryResponse, HttpStatus.OK);
     }
 
+    @GetMapping("public/category")
+    public ResponseEntity<GetOneCategoryDto> getCategoryByName(@RequestParam String categoryName){
+        GetOneCategoryDto getOneCategoryDto=categoryService.getCategoryByName(categoryName);
+        return new ResponseEntity<>(getOneCategoryDto,HttpStatus.FOUND);
+    }
+
+
     @PostMapping("/public/categories")
     public ResponseEntity<CategoryDto> createCategory(@Valid @RequestBody CategoryDto categoryDTO){
         CategoryDto savedCategoryDTO = categoryService.createCategory(categoryDTO);
         return new ResponseEntity<>(savedCategoryDTO, HttpStatus.CREATED);
     }
 
+
     @DeleteMapping("/admin/categories/{categoryId}")
     public ResponseEntity<CategoryDto> deleteCategory(@PathVariable Long categoryId){
         CategoryDto deletedCategory = categoryService.deleteCategory(categoryId);
         return new ResponseEntity<>(deletedCategory, HttpStatus.OK);
     }
+
 
 
     @PutMapping("/public/categories/{categoryId}")
