@@ -28,6 +28,8 @@ public class GlobalExceptionHandler {
 
         return  new ResponseEntity<Map<String,String>>(response, HttpStatus.BAD_REQUEST);
     }
+
+
     @ExceptionHandler(InsufficientStockException.class)
     public ResponseEntity<APIResponse> insufficientStockException(InsufficientStockException e){
         String message =e.getMessage();
