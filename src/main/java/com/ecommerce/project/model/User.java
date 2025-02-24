@@ -75,5 +75,8 @@ public class User {
             orphanRemoval = true)
     private Set<Product> products;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Cart cart;
+
 
 }
